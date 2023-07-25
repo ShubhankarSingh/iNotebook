@@ -59,7 +59,7 @@ router.post('/login', [
     body('email', 'Enter a valid email').isEmail(),
     body('password', 'Password cannot be blank').exists(),
 ], async (req, res)=>{
-
+    let success = false
     // It returns bad request and errors if user enters invalid data.
     const result = validationResult(req);
     if(!result.isEmpty()){
@@ -70,12 +70,14 @@ router.post('/login', [
     try{
         let user = await User.findOne({email});
         if(!user){
-            return res.status(400).json({error: "Please try to login with correct credentails"});
+            success = false
+            return res.status(400).json({success, error: "Please try to login with correct credentails"});
         }
 
         const passwordCompare = await bcrypt.compare(password, user.password);
         if(!passwordCompare){
-            return res.status(400).json({error: "Please try to login with correct credetials"});
+            success = false
+            return res.status(400).json({success, error: "Please try to login with correct credetials"});
         }
 
         const payload = {
@@ -84,7 +86,8 @@ router.post('/login', [
             }
         }
         const authtoken = jwt.sign(payload, JWT_SECRET);
-        res.json({authtoken})
+        success = true
+        res.json({success, authtoken})
     
     }catch(error){
         console.log(error.message);
